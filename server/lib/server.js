@@ -1,15 +1,23 @@
 import mongoose from "mongoose";
 import pino from "pino";
+import path from "path";
 import Fastify from "fastify";
 import sensible from "@fastify/sensible";
 import cors from "@fastify/cors";
 import fastifyPrintRoutes from "fastify-print-routes";
+import fastifyStatic from "@fastify/static";
+import fastifySession from "@fastify/session";
+import fastifyCookie from "@fastify/cookie";
+import { fileURLToPath } from "url";
 
 import config from "./config/config.js";
 import log from "./log.js";
 
 import registerHealthRoutes from "./routes/healthRoutes.js";
 import registerRegistrationRoutes from "./routes/registrationRoutes.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const transport = pino.transport({
   target: "pino-pretty",
@@ -22,8 +30,21 @@ const fastify = Fastify({
   logger,
 });
 
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, "../public"),
+  prefix: "/public/",
+  default: "/",
+});
+
 fastify.register(fastifyPrintRoutes);
 fastify.register(sensible);
+fastify.register(fastifyCookie);
+fastify.register(fastifySession, {
+  secret: "myQA58pFBxhJw8UxxbPAXadxY6zZAFvEpVThLhW9",
+  cookieName: "sessionId",
+  cookie: { secure: false },
+  expires: 1800000,
+});
 
 fastify.register(cors, {
   origin: "*",
@@ -39,8 +60,6 @@ fastify.register((instance, opts, next) => {
 });
 
 server.start = async function start() {
-  // server.db = await mongoose.connect(config.database.url);
-
   fastify.listen({ port: config.httpPort, host: config.httpAddress }, (err) => {
     if (!err) {
       fastify.log.info(
@@ -57,7 +76,6 @@ server.start = async function start() {
 };
 
 server.stop = async function stop() {
-  // await mongoose.disconnect();
   fastify.close((err) => {
     if (err) {
       log.error(
