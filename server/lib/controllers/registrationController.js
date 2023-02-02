@@ -51,6 +51,8 @@ registrationController.startRegistration = async (_req, reply) => {
 registrationController.finishRegistration = async (_req, reply) => {
   const { id, rawId, response, type } = _req.body;
 
+  let result;
+
   if (type !== "public-key") {
     reply.badRequest({
       status: "error",
@@ -82,9 +84,13 @@ registrationController.finishRegistration = async (_req, reply) => {
       "Handling create credential request, storing information in database for: " +
         _req.session.username
     );
+
     // This is a create credential request
     result = utils.verifyAuthenticatorAttestationResponse(response);
+    console.dir(result);
+
     if (result.verified) {
+      console.dir(result.authrInfo);
       database[_req.session.username].authenticators.push(result.authrInfo);
       database[_req.session.username].registered = true;
     }

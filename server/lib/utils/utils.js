@@ -224,8 +224,6 @@ utils.verifyAuthenticatorAttestationResponse = (responseInput) => {
   let attestationBuffer = base64url.toBuffer(responseInput.attestationObject);
   let ctapMakeCredResp = cbor.decodeAllSync(attestationBuffer)[0];
 
-  console.dir(ctapMakeCredResp.attStmt);
-
   let response = { verified: false };
   if (ctapMakeCredResp.fmt === "fido-u2f") {
     let authrDataStruct = utils.parseMakeCredAuthData(
@@ -324,6 +322,41 @@ utils.verifyAuthenticatorAttestationResponse = (responseInput) => {
         credID: base64url.encode(authrDataStruct.credID),
       };
     }
+  } else if (ctapMakeCredResp.fmt === "packed") {
+    const clientDataHash = utils.hash(
+      base64url.toBuffer(responseInput.clientDataJSON)
+    );
+    const signatureBase = Buffer.concat([
+      ctapMakeCredResp.authData,
+      clientDataHash,
+    ]);
+
+    let authrDataStruct = utils.parseMakeCredAuthData(
+      ctapMakeCredResp.authData
+    );
+
+    let publicKey = utils.COSEECDHAtoPKCS(authrDataStruct.COSEPublicKey);
+
+    const PEMCertificate = utils.ASN1toPEM(publicKey);
+    const {
+      attStmt: { sig: signature, alg },
+    } = ctapMakeCredResp;
+
+    response.authrInfo = {
+      fmt: "fido-u2f",
+      publicKey: base64url.encode(publicKey),
+      counter: authrDataStruct.counter,
+      credID: base64url.encode(authrDataStruct.credID),
+    };
+
+    response.verified = // Verify that sig is a valid signature over the concatenation of authenticatorData
+      // and clientDataHash using the attestation public key in attestnCert with the algorithm specified in alg.
+      utils.verifySignature(signature, signatureBase, PEMCertificate) &&
+      alg === -7;
+  } else if (ctapMakeCredResp.fmt === "none") {
+    response.verified =
+      this.config.attestation ==
+      Dictionaries.AttestationConveyancePreference.NONE;
   } else {
     throw new Error("Unsupported attestation format! " + ctapMakeCredResp.fmt);
   }
