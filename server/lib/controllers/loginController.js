@@ -30,4 +30,17 @@ loginController.login = async (_req, reply) => {
   reply.send(getAssertion);
 };
 
+loginController.status = async (_req, reply) => {
+  const username = _req.session.username;
+  const challenge = _req.session.challenge;
+  const registered = database[_req.session.username]?.registered;
+  reply.send({ username, challenge, registered });
+};
+
+loginController.logout = async (_req, reply) => {
+  database[_req.session.username] = null;
+  _req.session = null;
+  reply.ok({ status: "ok", message: "User logged out" });
+};
+
 export default loginController;

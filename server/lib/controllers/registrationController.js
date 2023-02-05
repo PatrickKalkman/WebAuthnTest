@@ -15,6 +15,7 @@ registrationController.startRegistration = async (_req, reply) => {
       " and name: " +
       name
   );
+
   if (database[username] && database[username].registered) {
     reply.badRequest({
       status: "error",
@@ -95,7 +96,12 @@ registrationController.finishRegistration = async (_req, reply) => {
       database[_req.session.username].registered = true;
     }
   } else if (response.authenticatorData !== undefined) {
-    // This is a get assertion request
+    // This is a verification request
+    result = utils.verifyAuthenticatorAssertionResponse(
+      id,
+      response,
+      database[_req.session.username].authenticators
+    );
   } else {
     reply.badRequest({
       status: "error",

@@ -61,6 +61,11 @@ utils.generateServerMakeCredRequest = (username, displayName, id) => {
     },
 
     attestation: "direct",
+    authenticatorSelection: {
+      residentKey: "preferred",
+      requireResidentKey: false,
+      userVerification: "preferred",
+    },
 
     pubKeyCredParams: [
       {
@@ -86,12 +91,15 @@ utils.generateServerGetAssertion = (authenticators) => {
     allowCredentials.push({
       type: "public-key",
       id: authr.credID,
-      transports: ["usb", "nfc", "ble"],
+      transports: ["usb", "nfc", "ble", "internal"],
     });
   }
   return {
     challenge: utils.randomBase64URLBuffer(32),
     allowCredentials: allowCredentials,
+    userVerification: "preferred",
+    rpId: "localhost",
+    timeout: 60000,
   };
 };
 
@@ -397,13 +405,12 @@ utils.parseGetAssertAuthData = (buffer) => {
 };
 
 utils.verifyAuthenticatorAssertionResponse = (
-  webAuthnResponse,
+  id,
+  responseInput,
   authenticators
 ) => {
-  let authr = findAuthr(webAuthnResponse.id, authenticators);
-  let authenticatorData = base64url.toBuffer(
-    webAuthnResponse.response.authenticatorData
-  );
+  let authr = findAuthr(id, authenticators);
+  let authenticatorData = base64url.toBuffer(responseInput.authenticatorData);
 
   let response = { verified: false };
   if (authr.fmt === "fido-u2f") {
@@ -412,8 +419,8 @@ utils.verifyAuthenticatorAssertionResponse = (
     if (!(authrDataStruct.flags & U2F_USER_PRESENTED))
       throw new Error("User was NOT presented durring authentication!");
 
-    let clientDataHash = hash(
-      base64url.toBuffer(webAuthnResponse.response.clientDataJSON)
+    let clientDataHash = utils.hash(
+      base64url.toBuffer(responseInput.clientDataJSON)
     );
     let signatureBase = Buffer.concat([
       authrDataStruct.rpIdHash,
@@ -423,7 +430,7 @@ utils.verifyAuthenticatorAssertionResponse = (
     ]);
 
     let publicKey = utils.ASN1toPEM(base64url.toBuffer(authr.publicKey));
-    let signature = base64url.toBuffer(webAuthnResponse.response.signature);
+    let signature = base64url.toBuffer(responseInput.signature);
 
     response.verified = utils.verifySignature(
       signature,
