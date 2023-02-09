@@ -299,7 +299,7 @@ utils.verifyAuthenticatorAttestationResponse = (responseInput) => {
 
     response.verified = // Verify that sig is a valid signature over the concatenation of authenticatorData
       // and clientDataHash using the attestation public key in attestnCert with the algorithm specified in alg.
-      verifySignature(signature, signatureBase, PEMCertificate) &&
+      utils.verifySignature(signature, signatureBase, PEMCertificate) &&
       // version must be 3 (which is indicated by an ASN.1 INTEGER with value 2)
       pem.version == 3 &&
       // ISO 3166 valid country
