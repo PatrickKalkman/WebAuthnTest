@@ -1,4 +1,4 @@
-import registrationController from "../controllers/registrationController.js";
+import registrationController from "../controllers/userController.js";
 
 const StartRegistrationBodySchema = {
   body: {
@@ -26,12 +26,12 @@ const FinishRegistrationBodySchema = {
 
 export default async function (fastify) {
   fastify.post(
-    "/api/registration",
+    "/api/user/register",
     { schema: StartRegistrationBodySchema },
     registrationController.startRegistration
   );
   fastify.put(
-    "/api/registration",
+    "/api/user/register",
     { schema: FinishRegistrationBodySchema },
     registrationController.finishRegistration
   );

@@ -5,9 +5,9 @@ import database from "../database/database.js";
 import log from "../log.js";
 import utils from "../utils/utils.js";
 
-const registrationController = {};
+const userController = {};
 
-registrationController.startRegistration = async (_req, reply) => {
+userController.startRegistration = async (_req, reply) => {
   const { username, name } = _req.body;
   log.info(
     "Registration request received for username: " +
@@ -16,29 +16,22 @@ registrationController.startRegistration = async (_req, reply) => {
       name
   );
 
-  if (database[username] && database[username].registered) {
-    reply.badRequest({
-      status: "error",
-      message: `Username ${username} already exists`,
-    });
+  const userFromDb = await database.getUser(username);
+  log.info("User from db: " + userFromDb);
+  if (userFromDb && userFromDb.registered) {
+    reply.badRequest(`Username ${userFromDb.username} already exists`);
     return;
   }
 
-  const user = {
-    registered: false,
-    name,
-    id: utils.randomBase64URLBuffer(),
-    authenticators: [],
-  };
-
-  database[username] = user;
+  const id = utils.randomBase64URLBuffer();
+  await database.addUser(username, name, false, null, null, id);
 
   _req.session.username = username;
 
   const makeCredChallenge = utils.generateServerMakeCredRequest(
     username,
     name,
-    user.id
+    id
   );
 
   makeCredChallenge.status = "ok";
@@ -49,7 +42,7 @@ registrationController.startRegistration = async (_req, reply) => {
   reply.send(makeCredChallenge);
 };
 
-registrationController.finishRegistration = async (_req, reply) => {
+userController.finishRegistration = async (_req, reply) => {
   const { id, rawId, response, type } = _req.body;
 
   let result;
@@ -63,7 +56,6 @@ registrationController.finishRegistration = async (_req, reply) => {
   }
 
   const clientData = JSON.parse(base64url.decode(response.clientDataJSON));
-
   if (clientData.challenge !== _req.session.challenge) {
     reply.badRequest({
       status: "error",
@@ -72,7 +64,7 @@ registrationController.finishRegistration = async (_req, reply) => {
     return;
   }
 
-  if (clientData.origin !== "http://localhost:8080") {
+  if (clientData.origin !== "http://localhost:8081") {
     reply.badRequest({
       status: "error",
       message: "Registration failed! Origins do not match",
@@ -88,12 +80,9 @@ registrationController.finishRegistration = async (_req, reply) => {
 
     // This is a create credential request
     result = utils.verifyAuthenticatorAttestationResponse(response);
-    console.dir(result);
 
     if (result.verified) {
-      console.dir(result.authrInfo);
-      database[_req.session.username].authenticators.push(result.authrInfo);
-      database[_req.session.username].registered = true;
+      await database.updateUser(_req.session.username, true, result.authrInfo.fmt, result.authrInfo.publicKey, result.authrInfo.credID);
     }
   } else if (response.authenticatorData !== undefined) {
     // This is a verification request
@@ -103,27 +92,18 @@ registrationController.finishRegistration = async (_req, reply) => {
       database[_req.session.username].authenticators
     );
   } else {
-    reply.badRequest({
-      status: "error",
-      message: "Cannot determine the type of response",
-    });
+    reply.badRequest("Cannot determine the type of response");
     return;
   }
 
   if (result.verified) {
     _req.session.loggedIn = true;
-    reply.send({
-      status: "ok",
-      message: "Registration successfull",
-    });
+    reply.send("Registration successfull");
     return;
   } else {
-    reply.badRequest({
-      status: "error",
-      message: "Cannot authenticate signature",
-    });
+    reply.badRequest("Cannot authenticate signature");
     return;
   }
 };
 
-export default registrationController;
+export default userController;

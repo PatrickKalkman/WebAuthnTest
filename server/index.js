@@ -10,11 +10,14 @@ dotenv.config();
 import log from './lib/log.js';
 import server from './lib/server.js';
 import config from './lib/config/config.js';
+import database from './lib/database/database.js';
 
 const app = {};
 
 app.init = async function init() {
   log.info('Started WebAuthn server, waiting for requests');
+  database.open();
+  database.createTables();
   server.start();
   await app.handleBackgroundTasks();
 };
@@ -28,6 +31,7 @@ app.handleBackgroundTasks = async () => {
 
 app.shutdown = function shutdown() {
   server.stop();
+  database.close();
   process.exit();
 };
 

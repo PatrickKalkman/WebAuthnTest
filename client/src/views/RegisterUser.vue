@@ -3,7 +3,7 @@
     <h3>Register user</h3>
     <form @submit.prevent="register">
       <label for="name"> Name: </label>
-      <input v-model="name" type="email" name="name" value />
+      <input v-model="name" type="name" name="name" value />
 
       <label for="email"> Email: </label>
       <input v-model="email" type="email" name="email" value />
@@ -16,26 +16,40 @@
 </template>
 
 <script>
+import utils from '../utils/utils.js';
+
 export default {
   data() {
     return {
       email: '',
       error: '',
-    };
+    };   
+  },
+  computed: {
+    challenge () {
+      return this.$store.state.credentialsChallenge;
+    }
   },
   methods: {
-    register() {
-      this.$store
-        .dispatch('register', {
-          name: this.name,
-          email: this.email,
-        })
-        .then(() => {
-          this.$router.push({ name: 'dashboard' });
-        })
-        .catch((err) => {
-          this.error = err.response.data.message;
-        });
+    async register() {
+      await this.$store.dispatch('startRegistration', {
+                username: this.email,
+                name: this.name,
+              });
+      
+      const credentialInfo = await navigator.credentials.create({ publicKey: {...this.challenge}});
+      const encodedCredentialInfo = utils.encodeCredentialInfoRequest(credentialInfo);
+      await this.$store.dispatch('completeRegistration', encodedCredentialInfo);
+       
+      //  console.log({...this.challenge});
+
+        // .then(() => { 
+
+        //   this.$router.push({ name: 'dashboard' });
+        // })
+        // .catch((err) => {
+        //   this.error = err.response.data.message;
+        // });
     },
   },
 };

@@ -1,93 +1,104 @@
 import { createStore } from 'vuex';
-import axios from 'axios';
+//import axios from 'axios';
+import utils from '../utils/utils.js';
 
-const apiClient = axios.create({
-  baseURL: 'http://localhost:8080/api/',
-  withCredentials: false,
-  headers: {
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-  },
-});
+// const apiClient = axios.create({
+//   baseURL: 'http://localhost:8081/api/',
+//   withCredentials: false,
+//   headers: {
+//     Accept: 'application/json',
+//     'Content-Type': 'application/json',
+//   },
+// });
 
 export default createStore({
   state: {
     user: null,
-    twofactor: null,
-    twofactorenabled: false,
-    twofactorvalidated: false,
     customers: [],
+    credentialsChallenge: null,
   },
   mutations: {
     SET_USER_DATA(state, userData) {
-      state.user = userData;
-      state.twofactorenabled = userData.twoFactorEnabled;
-      localStorage.setItem('user', JSON.stringify(userData));
-      apiClient.defaults.headers.common.Authorization = `Bearer ${userData.token}`;
+      state.credentialsChallenge = utils.encodeCredentialsRequest(userData);
+    },
+    UPDATE_USER_DATA(state, userData) {
+      //state.credentialsChallenge = utils.encodeCredentialsRequest(userData);
+      localStorage.removeItem('user');
     },
     CLEAR_USER_DATA() {
       localStorage.removeItem('user');
     },
-    SET_TWOFACTOR_DATA(state, twoFactorData) {
-      state.twofactor = twoFactorData;
-    },
-    SET_TWOFACTOR_ENABLED(state, twoFactorEnabled) {
-      state.twofactorenabled = twoFactorEnabled;
-    },
-    SET_TWOFACTOR_LOGIN(state, validated) {
-      state.twofactorvalidated = validated;
+    SET_LOGIN_DATA(state, userData) {
+
     },
     SET_CUSTOMERS(state, customerData) {
       state.customers = customerData;
     },
   },
   actions: {
-    register({ commit }, credentials) {
-      return apiClient.post('/user/register', credentials).then(({ data }) => {
-        commit('SET_USER_DATA', data);
+    async startRegistration({ commit }, credentials) {
+      const response = await fetch('/api/user/register', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
       });
+      const responseJson = await response.json();
+      if (responseJson.status !== 'ok')
+        throw new Error(
+          `Server responed with error. The message is: ${responseJson.message}`
+        );
+      commit('SET_USER_DATA', responseJson);
     },
-    login({ commit }, credentials) {
-      return apiClient.post('/user/login', credentials).then(({ data }) => {
-        commit('SET_USER_DATA', data);
+    async completeRegistration({ commit }, credentials) {
+      const response = await fetch('/api/user/register', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
       });
+      const responseJson = await response.json();
+      if (responseJson.status !== 'ok')
+        throw new Error(
+          `Server responed with error. The message is: ${responseJson.message}`
+        );
+      commit('UPDATE_USER_DATA', responseJson);
+    },
+    async login({ commit }, credentials) {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+      const responseJson = await response.json();
+      if (responseJson.status !== 'ok')
+        throw new Error(
+          `Server responed with error. The message is: ${responseJson.message}`
+        );
+      commit('SET_LOGIN_DATA', responseJson);
     },
     logout({ commit }) {
       commit('CLEAR_USER_DATA');
     },
-    twoFactorRegisterStep1({ commit }, credentials) {
-      return apiClient
-        .post('/user/enabletwofactorstep1', credentials)
-        .then(({ data }) => {
-          commit('SET_TWOFACTOR_DATA', data);
-        });
-    },
-    twoFactorRegisterStep2({ commit }, credentials) {
-      return apiClient
-        .post('/user/enabletwofactorstep2', credentials)
-        .then(({ data }) => {
-          commit('SET_TWOFACTOR_ENABLED', data);
-        });
-    },
-    validateToken({ commit }, credentials) {
-      return apiClient
-        .post('/user/validatetoken', credentials)
-        .then(({ data }) => {
-          commit('SET_TWOFACTOR_LOGIN', data.validated);
-        });
-    },
     getCustomers({ commit }) {
-      return apiClient.get('/customer').then(({ data }) => {
-        commit('SET_CUSTOMERS', data);
-      });
+      // return apiClient.get('/customer').then(({ data }) => {
+      //   commit('SET_CUSTOMERS', data);
+      // });
     },
   },
   getters: {
     loggedIn(state) {
       return !!state.user;
     },
-    twoFactorEnabled(state) {
-      return state.user.twoFactorEnabled;
+    credentialsChallenge(state) {
+      return state.credentialsChallenge;
     },
   },
   modules: {},

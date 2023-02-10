@@ -14,7 +14,7 @@ import config from "./config/config.js";
 import log from "./log.js";
 
 import registerHealthRoutes from "./routes/healthRoutes.js";
-import registerRegistrationRoutes from "./routes/registrationRoutes.js";
+import registerUserRoutes from "./routes/userRoutes.js";
 import registerLoginRoutes from "./routes/loginRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -56,7 +56,7 @@ const server = {};
 
 fastify.register((instance, opts, next) => {
   registerHealthRoutes(instance);
-  registerRegistrationRoutes(instance);
+  registerUserRoutes(instance);
   registerLoginRoutes(instance);
   next();
 });

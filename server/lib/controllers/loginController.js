@@ -10,17 +10,15 @@ const loginController = {};
 loginController.login = async (_req, reply) => {
   const { username } = _req.body;
 
-  if (!database[username] || !database[username].registered) {
-    reply.badRequest({
-      status: "failed",
-      message: `User ${username} does not exist or not registered`,
-    });
-
+  const user = await database.getUser(username)
+  if (!user || !user.registered) {
+    reply.badRequest(`User ${username} does not exist or not registered`);
     return;
   }
 
+  const authenticator = { fmt: user.fmt, publicKey: user.publicKey, credID: user.credID };
   const getAssertion = utils.generateServerGetAssertion(
-    database[username].authenticators
+    [authenticator]
   );
   getAssertion.status = "ok";
 
@@ -33,14 +31,14 @@ loginController.login = async (_req, reply) => {
 loginController.status = async (_req, reply) => {
   const username = _req.session.username;
   const challenge = _req.session.challenge;
-  const registered = database[_req.session.username]?.registered;
+  const user = await database.getUser(username);
+  const registered = user?.registered;
   reply.send({ username, challenge, registered });
 };
 
 loginController.logout = async (_req, reply) => {
-  database[_req.session.username] = null;
   _req.session = null;
-  reply.ok({ status: "ok", message: "User logged out" });
+  reply.ok("User logged out");
 };
 
 export default loginController;

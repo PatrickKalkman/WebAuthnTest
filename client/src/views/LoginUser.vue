@@ -10,12 +10,6 @@
         Don't have an account? Register.
       </router-link>
     </form>
-    <form v-else @submit.prevent="validateToken">
-      <label for="token"> Token: </label>
-      <input v-model="token" type="text" name="token" value />
-      <button type="submit" name="button">Validate</button>
-      <p>{{ error }}</p>
-    </form>
   </div>
 </template>
 
@@ -25,42 +19,18 @@ export default {
     return {
       title: 'Login',
       email: '',
-      password: '',
       error: '',
       token: '',
-      showTwoFactorPanel: false,
     };
   },
   methods: {
     login() {
       this.$store
         .dispatch('login', {
-          email: this.email,
-          password: this.password,
+          username: this.email,
         })
         .then(() => {
-          if (this.$store.state.twofactorenabled) {
-            this.showTwoFactorPanel = true;
-            this.title = 'Two Factor Authentication';
-          } else {
             this.$router.push({ name: 'dashboard' });
-          }
-        })
-        .catch((err) => {
-          this.error = err.response.data.message;
-        });
-    },
-    validateToken() {
-      this.$store
-        .dispatch('validateToken', {
-          token: this.token,
-        })
-        .then(() => {
-          if (this.$store.state.twofactorvalidated) {
-            this.$router.push({ name: 'dashboard' });
-          } else {
-            this.error = 'The provided token was not valid, please try again';
-          }
         })
         .catch((err) => {
           this.error = err.response.data.message;

@@ -66,7 +66,9 @@ utils.generateServerMakeCredRequest = (username, displayName, id) => {
       requireResidentKey: false,
       userVerification: "preferred",
     },
-
+    extensions: {
+      credProps: true,
+    },
     pubKeyCredParams: [
       {
         type: "public-key",
