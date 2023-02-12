@@ -8,6 +8,16 @@ utils.encodeCredentialsRequest = (credReq) => {
   return credReq;
 };
 
+utils.encodeAssetRequest = (assetReq) => {
+    assetReq.challenge = base64url.decode(assetReq.challenge);
+    
+    for(let allowCred of assetReq.allowCredentials) {
+        allowCred.id = base64url.decode(allowCred.id);
+    }
+
+    return assetReq 
+}
+
 utils.encodeCredentialInfoRequest = (pubKeyCred) => {
   if (pubKeyCred instanceof Array) {
     let arr = [];
@@ -32,5 +42,32 @@ utils.encodeCredentialInfoRequest = (pubKeyCred) => {
 
   return pubKeyCred;
 };
+
+
+utils.publicKeyCredentialToJSON = (pubKeyCred) => {
+    if (pubKeyCred instanceof Array) {
+        let arr = [];
+        for(let i of pubKeyCred)
+            arr.push(utils.publicKeyCredentialToJSON(i));
+
+        return arr
+    }
+
+    if (pubKeyCred instanceof ArrayBuffer) {
+        return base64url.encode(pubKeyCred)
+    }
+
+    if (pubKeyCred instanceof Object) {
+        let obj = {};
+
+        for (let key in pubKeyCred) {
+            obj[key] = utils.publicKeyCredentialToJSON(pubKeyCred[key])
+        }
+
+        return obj
+    }
+
+    return pubKeyCred
+}
 
 export default utils;

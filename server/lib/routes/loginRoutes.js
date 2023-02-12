@@ -16,6 +16,7 @@ export default async function (fastify) {
     { schema: LoginBodySchema },
     loginController.login
   );
+  fastify.post("/api/login/verify", loginController.loginVerify);
   fastify.get("/api/login/status", loginController.status);
   fastify.get("/api/login/info", loginController.status);
   fastify.get("/api/login/logout", loginController.logout);

@@ -11,7 +11,6 @@
   "author": "Patrick Kalkman (patrick@simpletechture.nl)",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.24.0",
     "core-js": "^3.6.5",
     "sass": "^1.45.2",
     "sass-loader": "^7.3.1",

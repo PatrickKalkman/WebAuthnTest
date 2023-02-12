@@ -1,7 +1,7 @@
 <template>
   <div>
     <h3>{{ title }}</h3>
-    <form v-if="!showTwoFactorPanel" @submit.prevent="login">
+    <form @submit.prevent="login">
       <label for="email"> Email: </label>
       <input v-model="email" type="email" name="email" value />
       <button type="submit" name="button">Login</button>
@@ -14,6 +14,8 @@
 </template>
 
 <script>
+import utils from '../utils/utils.js';
+
 export default {
   data() {
     return {
@@ -23,18 +25,24 @@ export default {
       token: '',
     };
   },
+  computed: {
+    assertChallenge () {
+      return this.$store.state.assertChallenge;
+    },
+    loginError () {
+      return this.$store.state.loginError;
+    },
+  },
   methods: {
-    login() {
-      this.$store
-        .dispatch('login', {
-          username: this.email,
-        })
-        .then(() => {
-            this.$router.push({ name: 'dashboard' });
-        })
-        .catch((err) => {
-          this.error = err.response.data.message;
-        });
+    async login() {
+      await this.$store.dispatch('login', { username: this.email });
+      if (this.loginError) {
+        this.error = this.loginError;
+        return;
+      }
+      const credentialInfo = await navigator.credentials.get({publicKey: {...this.assertChallenge}});
+      const encodedCredentialInfo = utils.encodeCredentialInfoRequest(credentialInfo);
+      await this.$store.dispatch('verifyLogin', encodedCredentialInfo);
     },
   },
 };

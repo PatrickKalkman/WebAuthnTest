@@ -1,6 +1,4 @@
-// External Dependancies
 import base64url from "base64url";
-import constants from "../config/constants.js";
 import database from "../database/database.js";
 import log from "../log.js";
 import utils from "../utils/utils.js";
@@ -84,13 +82,6 @@ userController.finishRegistration = async (_req, reply) => {
     if (result.verified) {
       await database.updateUser(_req.session.username, true, result.authrInfo.fmt, result.authrInfo.publicKey, result.authrInfo.credID);
     }
-  } else if (response.authenticatorData !== undefined) {
-    // This is a verification request
-    result = utils.verifyAuthenticatorAssertionResponse(
-      id,
-      response,
-      database[_req.session.username].authenticators
-    );
   } else {
     reply.badRequest("Cannot determine the type of response");
     return;

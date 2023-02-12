@@ -34,6 +34,18 @@ database.getUser = (username) => {
   });
 };
 
+database.getUserByCredId = (credID) => {
+  return new Promise((resolve, reject) => {
+    database.db.get('SELECT * FROM users WHERE credID = ?', [credID], (err, row) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(row);
+      }
+    });
+  });
+};
+
 database.addUser = (username, name, registered, fmt, publicKey, credID) => {
   return new Promise((resolve, reject) => {
     database.db.run('INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)', [username, name, registered, fmt, publicKey, credID], (err) => {

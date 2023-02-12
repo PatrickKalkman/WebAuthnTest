@@ -40,16 +40,6 @@ export default {
       const credentialInfo = await navigator.credentials.create({ publicKey: {...this.challenge}});
       const encodedCredentialInfo = utils.encodeCredentialInfoRequest(credentialInfo);
       await this.$store.dispatch('completeRegistration', encodedCredentialInfo);
-       
-      //  console.log({...this.challenge});
-
-        // .then(() => { 
-
-        //   this.$router.push({ name: 'dashboard' });
-        // })
-        // .catch((err) => {
-        //   this.error = err.response.data.message;
-        // });
     },
   },
 };

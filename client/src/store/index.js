@@ -16,6 +16,7 @@ export default createStore({
     user: null,
     customers: [],
     credentialsChallenge: null,
+    assertChallenge: null,
   },
   mutations: {
     SET_USER_DATA(state, userData) {
@@ -29,7 +30,13 @@ export default createStore({
       localStorage.removeItem('user');
     },
     SET_LOGIN_DATA(state, userData) {
-
+      state.assertChallenge = utils.encodeAssetRequest(userData);
+    },
+    SET_LOGIN_ERROR(state, userData) {
+      state.loginError = userData;
+    },
+    SET_LOGIN_VERIFY_DATA(state, userData) {
+      state.assertChallenge = utils.encodeCredentialsRequest(userData);
     },
     SET_CUSTOMERS(state, customerData) {
       state.customers = customerData;
@@ -79,10 +86,25 @@ export default createStore({
       });
       const responseJson = await response.json();
       if (responseJson.status !== 'ok')
+        commit('SET_LOGIN_ERROR', responseJson.message)
+      else 
+        commit('SET_LOGIN_DATA', responseJson);
+    },
+    async verifyLogin({ commit }, credentials) {
+      const response = await fetch('/api/login/verify', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+      const responseJson = await response.json();
+      if (responseJson.status !== 'ok')
         throw new Error(
           `Server responed with error. The message is: ${responseJson.message}`
         );
-      commit('SET_LOGIN_DATA', responseJson);
+      commit('SET_LOGIN_VERIFY_DATA', responseJson);
     },
     logout({ commit }) {
       commit('CLEAR_USER_DATA');

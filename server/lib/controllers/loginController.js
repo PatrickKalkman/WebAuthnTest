@@ -1,8 +1,5 @@
-// External Dependancies
 import base64url from "base64url";
-import constants from "../config/constants.js";
 import database from "../database/database.js";
-import log from "../log.js";
 import utils from "../utils/utils.js";
 
 const loginController = {};
@@ -26,6 +23,65 @@ loginController.login = async (_req, reply) => {
   _req.session.username = username;
 
   reply.send(getAssertion);
+};
+
+loginController.loginVerify = async (_req, reply) => {
+  const { id, response, type } = _req.body;
+
+  let result;
+
+  if (type !== "public-key") {
+    reply.badRequest({
+      status: "error",
+      message: "Registration failed! type is not public-key",
+    });
+    return;
+  }
+
+  const clientData = JSON.parse(base64url.decode(response.clientDataJSON));
+  if (clientData.challenge !== _req.session.challenge) {
+    reply.badRequest({
+      status: "error",
+      message: "Registration failed! Challenges do not match",
+    });
+    return;
+  }
+
+  if (clientData.origin !== "http://localhost:8081") {
+    reply.badRequest({
+      status: "error",
+      message: "Registration failed! Origins do not match",
+    });
+    return;
+  }
+
+  if (response.authenticatorData !== undefined) {
+
+    const user = await database.getUserByCredId(id)
+    if (!user || !user.registered) {
+      reply.badRequest(`User ${username} does not exist or not registered`);
+      return;
+    }
+
+    // This is a verification request
+    result = utils.verifyAuthenticatorAssertionResponse(
+      id,
+      response,
+      [{ fmt: user.fmt, publicKey: user.publicKey, credID: user.credID }],
+    );
+  } else {
+    reply.badRequest("Cannot determine the type of response");
+    return;
+  }
+
+  if (result.verified) {
+    _req.session.loggedIn = true;
+    reply.send("Registration successfull");
+    return;
+  } else {
+    reply.badRequest("Cannot authenticate signature");
+    return;
+  }
 };
 
 loginController.status = async (_req, reply) => {
