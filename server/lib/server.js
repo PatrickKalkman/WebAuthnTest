@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import pino from "pino";
 import path from "path";
 import Fastify from "fastify";
@@ -16,6 +15,7 @@ import log from "./log.js";
 import registerHealthRoutes from "./routes/healthRoutes.js";
 import registerUserRoutes from "./routes/userRoutes.js";
 import registerLoginRoutes from "./routes/loginRoutes.js";
+import registerCustomerRoutes from "./routes/customerRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,6 +58,7 @@ fastify.register((instance, opts, next) => {
   registerHealthRoutes(instance);
   registerUserRoutes(instance);
   registerLoginRoutes(instance);
+  registerCustomerRoutes(instance);
   next();
 });
 

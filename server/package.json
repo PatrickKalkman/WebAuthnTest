@@ -23,6 +23,7 @@
     "fastify-print-routes": "^2.0.6",
     "fastify-routes": "^3.2.0",
     "iso-3166-1": "^2.1.1",
+    "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.9.0",
     "openid-client": "^5.3.2",
     "pino": "^8.7.0",

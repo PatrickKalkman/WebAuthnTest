@@ -13,12 +13,14 @@ environments.production = {
     level: process.env.LOG_LEVEL || 'info',
   },
   database: {
-    url: process.env.STORAGE_HOST || 'mongodb://localhost:27017',
     name: 'webauthn',
     connectRetry: 5, // seconds
   },
   workflow: {
     pollingInterval: 10, // Seconds
+  },
+  jwt: {
+    secret: '74cf7450-3ab5-4fe7-a505-6fffb187ce58',
   },
 };
 

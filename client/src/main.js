@@ -5,15 +5,15 @@ import store from './store';
 
 createApp({
   created() {
-    const userString = localStorage.getItem('user');
-    if (userString) {
-      try {
-        const userData = JSON.parse(userString);
-        this.$store.commit('SET_USER_DATA', userData);
-      } catch (error) {
-        this.$store.dispatch('logout');
-      }
-    }
+    // const userString = localStorage.getItem('user');
+    // if (userString) {
+    //   try {
+    //     const userData = JSON.parse(userString);
+    //     this.$store.commit('SET_USER_DATA', userData);
+    //   } catch (error) {
+    //     this.$store.dispatch('logout');
+    //   }
+    // }
     // axios.interceptors.response.use(
     //   (response) => response,
     //   (error) => {

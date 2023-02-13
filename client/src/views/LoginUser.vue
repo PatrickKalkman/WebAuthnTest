@@ -32,6 +32,9 @@ export default {
     loginError () {
       return this.$store.state.loginError;
     },
+    verifySucceeded () {
+      return this.$store.state.verifySucceeded;
+    }
   },
   methods: {
     async login() {
@@ -43,6 +46,12 @@ export default {
       const credentialInfo = await navigator.credentials.get({publicKey: {...this.assertChallenge}});
       const encodedCredentialInfo = utils.encodeCredentialInfoRequest(credentialInfo);
       await this.$store.dispatch('verifyLogin', encodedCredentialInfo);
+      console.log(this.verifySucceeded);
+      if (this.verifySucceeded) {
+        this.$router.push('dashboard');
+      } else {
+        this.error = 'Login failed'; 
+      }
     },
   },
 };

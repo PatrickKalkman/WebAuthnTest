@@ -17,13 +17,14 @@ export default createStore({
     customers: [],
     credentialsChallenge: null,
     assertChallenge: null,
+    verifySucceeded: false,
+    token: '',
   },
   mutations: {
     SET_USER_DATA(state, userData) {
       state.credentialsChallenge = utils.encodeCredentialsRequest(userData);
     },
     UPDATE_USER_DATA(state, userData) {
-      //state.credentialsChallenge = utils.encodeCredentialsRequest(userData);
       localStorage.removeItem('user');
     },
     CLEAR_USER_DATA() {
@@ -36,11 +37,15 @@ export default createStore({
       state.loginError = userData;
     },
     SET_LOGIN_VERIFY_DATA(state, userData) {
-      state.assertChallenge = utils.encodeCredentialsRequest(userData);
+      state.verifySucceeded = true;
+      state.token = userData.token;
     },
     SET_CUSTOMERS(state, customerData) {
       state.customers = customerData;
     },
+    SET_CUSTOMERS_ERROR(state, customerData) {
+      state.customersError = customerData;
+    }
   },
   actions: {
     async startRegistration({ commit }, credentials) {
@@ -101,18 +106,31 @@ export default createStore({
       });
       const responseJson = await response.json();
       if (responseJson.status !== 'ok')
-        throw new Error(
-          `Server responed with error. The message is: ${responseJson.message}`
-        );
-      commit('SET_LOGIN_VERIFY_DATA', responseJson);
+        commit('SET_LOGIN_ERROR', responseJson.message)
+      else 
+        commit('SET_LOGIN_VERIFY_DATA', responseJson);
     },
     logout({ commit }) {
       commit('CLEAR_USER_DATA');
     },
-    getCustomers({ commit }) {
-      // return apiClient.get('/customer').then(({ data }) => {
-      //   commit('SET_CUSTOMERS', data);
-      // });
+    async getCustomers({ commit }) {
+      try {
+        const response = await fetch('/api/customers', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + this.state.token,
+          },
+        });
+        if (response.status === 200) {
+          const responseJson = await response.json();
+          commit('SET_CUSTOMERS', responseJson);      
+        } else 
+          commit('SET_CUSTOMERS_ERROR', response.statusText);
+      } catch (error) {
+        console.log(error);
+      }
     },
   },
   getters: {

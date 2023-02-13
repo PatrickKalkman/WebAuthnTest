@@ -1,6 +1,9 @@
+import jwt from 'jsonwebtoken';
 import base64url from "base64url";
 import database from "../database/database.js";
 import utils from "../utils/utils.js";
+import config from "../config/config.js";
+
 
 const loginController = {};
 
@@ -9,7 +12,7 @@ loginController.login = async (_req, reply) => {
 
   const user = await database.getUser(username)
   if (!user || !user.registered) {
-    reply.badRequest(`User ${username} does not exist or not registered`);
+    reply.badRequest(`User ${username} does not exist or is not registered`);
     return;
   }
 
@@ -55,11 +58,12 @@ loginController.loginVerify = async (_req, reply) => {
     return;
   }
 
+  let user;
   if (response.authenticatorData !== undefined) {
 
-    const user = await database.getUserByCredId(id)
+    let user = await database.getUserByCredId(id)
     if (!user || !user.registered) {
-      reply.badRequest(`User ${username} does not exist or not registered`);
+      reply.badRequest(`User ${username} does not exist or is not registered`);
       return;
     }
 
@@ -75,12 +79,11 @@ loginController.loginVerify = async (_req, reply) => {
   }
 
   if (result.verified) {
+    const token = jwt.sign(id, config.jwt.secret);
     _req.session.loggedIn = true;
-    reply.send("Registration successfull");
-    return;
+    reply.send({verification: true, token, message: "Registration successfull" ,status: "ok"});
   } else {
-    reply.badRequest("Cannot authenticate signature");
-    return;
+    reply.badRequest({verification: false, message: "Cannot authenticate signature", status: "error"});
   }
 };
 
