@@ -2,7 +2,7 @@
   "name": "webauthntest",
   "version": "1.0.0",
   "private": false,
-  "description": "Test project for WebAuthn",
+  "description": "Backend for the passwordless sample app",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -18,14 +18,11 @@
     "@fidm/x509": "^1.2.1",
     "base64url": "^3.0.1",
     "cbor": "^8.1.0",
-    "dotenv": "^16.0.3",
     "fastify": "^4.12.0",
     "fastify-print-routes": "^2.0.6",
     "fastify-routes": "^3.2.0",
     "iso-3166-1": "^2.1.1",
     "jsonwebtoken": "^9.0.0",
-    "mongoose": "^6.9.0",
-    "openid-client": "^5.3.2",
     "pino": "^8.7.0",
     "pino-pretty": "^9.1.1",
     "sqlite3": "^5.1.4"

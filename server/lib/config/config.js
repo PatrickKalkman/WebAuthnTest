@@ -1,6 +1,5 @@
 /*
  * Create and export configuration variables used by the API
- *
  */
 
 // Container for all environments

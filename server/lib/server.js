@@ -12,7 +12,6 @@ import { fileURLToPath } from "url";
 import config from "./config/config.js";
 import log from "./log.js";
 
-import registerHealthRoutes from "./routes/healthRoutes.js";
 import registerUserRoutes from "./routes/userRoutes.js";
 import registerLoginRoutes from "./routes/loginRoutes.js";
 import registerCustomerRoutes from "./routes/customerRoutes.js";
@@ -55,7 +54,6 @@ fastify.register(cors, {
 const server = {};
 
 fastify.register((instance, opts, next) => {
-  registerHealthRoutes(instance);
   registerUserRoutes(instance);
   registerLoginRoutes(instance);
   registerCustomerRoutes(instance);

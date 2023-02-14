@@ -1,8 +1,8 @@
 {
-  "name": "twofactorclient",
+  "name": "passwordlessclient",
   "version": "0.1.0",
   "private": false,
-  "description": "The client of the two factor authentication sample app",
+  "description": "The client of the passwordless sample app",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
