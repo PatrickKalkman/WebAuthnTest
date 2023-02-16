@@ -67,7 +67,6 @@ loginController.loginVerify = async (_req, reply) => {
       return;
     }
 
-    // This is a verification request
     result = utils.verifyAuthenticatorAssertionResponse(
       id,
       response,
@@ -81,7 +80,7 @@ loginController.loginVerify = async (_req, reply) => {
   if (result.verified) {
     const token = jwt.sign(id, config.jwt.secret);
     _req.session.loggedIn = true;
-    reply.send({verification: true, token, message: "Registration successfull" ,status: "ok"});
+    reply.send({verification: true, token, message: "Login successfull", status: "ok"});
   } else {
     reply.badRequest({verification: false, message: "Cannot authenticate signature", status: "error"});
   }

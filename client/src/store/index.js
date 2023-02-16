@@ -1,15 +1,5 @@
 import { createStore } from 'vuex';
-//import axios from 'axios';
 import utils from '../utils/utils.js';
-
-// const apiClient = axios.create({
-//   baseURL: 'http://localhost:8081/api/',
-//   withCredentials: false,
-//   headers: {
-//     Accept: 'application/json',
-//     'Content-Type': 'application/json',
-//   },
-// });
 
 export default createStore({
   state: {
